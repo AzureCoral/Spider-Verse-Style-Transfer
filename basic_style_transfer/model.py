@@ -1,9 +1,5 @@
-import os
 import tensorflow as tf
-from typing import List, Dict, Union
-
-# Load compressed models from tensorflow_hub
-os.environ['TFHUB_MODEL_LOAD_FORMAT'] = 'COMPRESSED'
+from typing import List, Dict
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
   """
