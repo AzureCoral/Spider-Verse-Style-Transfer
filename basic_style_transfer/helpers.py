@@ -4,6 +4,15 @@ import numpy as np
 import PIL.Image
 
 def tensor_to_image(tensor: np.ndarray) -> PIL.Image.Image:
+  """
+  Converts a tensor into an image.
+
+  Parameters:
+  tensor (np.ndarray): The tensor to convert.
+
+  Returns:
+  PIL.Image.Image: The resulting image.
+  """
   tensor = tensor*255
   tensor = np.array(tensor, dtype=np.uint8)
   if np.ndim(tensor)>3:
@@ -12,6 +21,15 @@ def tensor_to_image(tensor: np.ndarray) -> PIL.Image.Image:
   return PIL.Image.fromarray(tensor)
 
 def load_img(path_to_img: str) -> tf.Tensor:
+  """
+  Loads an image from a file, converts it to a tensor, and resizes it to have a maximum dimension of 512.
+
+  Parameters:
+  path_to_img (str): The path to the image file.
+
+  Returns:
+  tf.Tensor: The resulting tensor.
+  """
   max_dim = 512
   img = tf.io.read_file(path_to_img)
   img = tf.image.decode_image(img, channels=3)
