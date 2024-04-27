@@ -1,6 +1,9 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import numpy as np
 import PIL.Image
+
+from typing import List
 
 def tensor_to_image(tensor: np.ndarray) -> PIL.Image.Image:
   """
@@ -43,3 +46,20 @@ def load_img(path_to_img: str) -> tf.Tensor:
   img = tf.image.resize(img, new_shape)
   img = img[tf.newaxis, :]
   return img
+
+def plot_losses(style_losses: List[float], content_losses: List[float]) -> None:
+  """
+  Plots the style and content losses using matplotlib.
+
+  Parameters:
+  style_losses (list): List of style losses.
+  content_losses (list): List of content losses.
+  """
+  plt.plot(style_losses, label='Style Loss')
+  plt.plot(content_losses, label='Content Loss')
+  plt.xlabel('Iteration')
+  plt.ylabel('Loss')
+  plt.title('Style and Content Losses')
+  plt.legend()
+  plt.yscale('log')  # Set y-axis to logarithmic scale
+  plt.show()

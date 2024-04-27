@@ -1,4 +1,3 @@
-import os
 import tensorflow as tf
 from helpers import *
 from model import StyleTransfer
@@ -29,7 +28,7 @@ def main():
 
     # Train the model:
     print("\nTraining model:")
-    img = model.train()    
+    img = model.train(visuals=True)    
     print("\nModel trained.")
 
     # Save the output image:
@@ -39,4 +38,5 @@ def main():
         tensor_to_image(img).save(f, "JPEG")
     print(f"Output image saved at {output_file_path}")
 
-main()
+if __name__ == "__main__":
+    main()

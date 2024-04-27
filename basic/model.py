@@ -1,5 +1,7 @@
 import platform
 import tensorflow as tf
+from helpers import *
+
 from typing import List, Dict
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
@@ -56,11 +58,7 @@ def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
   Returns:
   tf.Tensor: The resulting Gram matrix.
   """
-  # x = tf.transpose(x, (2, 0, 1))
-  # features = tf.reshape(x, (tf.shape(x)[0], -1))
-  # gram = tf.matmul(features, tf.transpose(features))
-  # return gram
-
+  # outer_product = tf.matmul(input_tensor, input_tensor, transpose_a=True)
   outer_product = tf.linalg.einsum('bijc,bijd->bcd', input_tensor, input_tensor)
   
   input_shape = tf.shape(input_tensor)
@@ -70,6 +68,23 @@ def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
 
   return normalized_result
 
+def calculate_loss(outputs: Dict[str, tf.Tensor], targets: Dict[str, tf.Tensor], weight: float) -> tf.Tensor:
+  """
+  Calculates the loss.
+
+  Parameters:
+  outputs (Dict[str, tf.Tensor]): The outputs.
+  targets (Dict[str, tf.Tensor]): The target values.
+  weight (float): The weight of the loss.
+
+  Returns:
+  tf.Tensor: The loss.
+  """
+  num_layers = len(targets)
+  loss = tf.add_n([mse(output, targets[name]) for name, output in outputs.items()])
+  loss /= num_layers
+  loss *= weight
+  return loss
 
 class StyleContentModel(tf.keras.models.Model):
   def __init__(self, style_layers: List[str], content_layers: List[str]):
@@ -137,35 +152,8 @@ class StyleTransfer():
     else:
         self.opt = tf.keras.optimizers.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
     self.image = tf.Variable(content_image)
-
-  def style_content_loss(self, outputs: Dict[str, Dict[str, tf.Tensor]], style_weight: float =1e-2, content_weight: float = 1e4) -> tf.Tensor:
-    """
-    Calculates the style and content loss.
-
-    Parameters:
-    outputs (Dict[str, Dict[str, tf.Tensor]]): The style and content outputs.
-    style_weight (float): The weight of the style loss.
-    content_weight (float): The weight of the content loss.
-
-    Returns:
-    tf.Tensor: The total loss.
-    """
-    num_style_layers = len(self.style_targets)
-    num_content_layers = len(self.content_targets)
-
-    style_outputs = outputs['style']
-    content_outputs = outputs['content']
-    style_loss = tf.add_n([tf.reduce_mean((style_outputs[name] - self.style_targets[name])**2) 
-                          for name in style_outputs.keys()])
-    style_loss *= style_weight / num_style_layers
-
-    content_loss = tf.add_n([tf.reduce_mean((content_outputs[name] - self.content_targets[name])**2) 
-                              for name in content_outputs.keys()])
-    content_loss *= content_weight / num_content_layers
-    loss = style_loss + content_loss
-    return loss
   
-  def style_loss(self, style_outputs: Dict[str, tf.Tensor], style_weight: float =1e-2) -> tf.Tensor:
+  def style_loss(self, style_outputs: Dict[str, tf.Tensor], style_weight: float = 1e-2) -> tf.Tensor:
     """
     Calculates the style loss.
 
@@ -176,11 +164,7 @@ class StyleTransfer():
     Returns:
     tf.Tensor: The style loss.
     """
-    num_style_layers = len(self.style_targets)
-    style_loss = tf.add_n([mse(output, self.style_targets[name]) 
-                          for name, output in style_outputs.items()])
-    style_loss *= style_weight / num_style_layers
-    return style_loss
+    return calculate_loss(style_outputs, self.style_targets, style_weight)
 
   def content_loss(self, content_outputs: Dict[str, tf.Tensor], content_weight: float = 1e4) -> tf.Tensor:
     """
@@ -193,31 +177,22 @@ class StyleTransfer():
     Returns:
     tf.Tensor: The content loss.
     """
-    num_content_layers = len(self.content_targets)
-    content_loss = tf.add_n([mse(output, self.content_targets[name]) 
-                              for name, output in content_outputs.items()])
-    content_loss *= content_weight / num_content_layers
-    return content_loss
+    return calculate_loss(content_outputs, self.content_targets, content_weight)
   
   @tf.function()
-  def train_step(self, image: tf.Tensor, total_variation_weight: float = 30) -> None:
-    """
-    Performs one training step.
-
-    Parameters:
-    image (tf.Tensor): The input image tensor.
-    total_variation_weight (float): The weight of the total variation loss.
-    """
+  def train_step(self, total_variation_weight: float = 30):
     with tf.GradientTape() as tape:
-        outputs = self.extractor(image)
-        loss = self.style_content_loss(outputs)
-        loss += total_variation_weight*tf.image.total_variation(image)
+      outputs = self.extractor(self.image)
+      
+      style_loss = self.style_loss(outputs['style'])
+      content_loss = self.content_loss(outputs['content'])
 
-    grad = tape.gradient(loss, image)
-    self.opt.apply_gradients([(grad, image)])
-    image.assign(clip_0_1(image))
+      loss = style_loss + content_loss + total_variation_weight*tf.image.total_variation(self.image)
 
-  def train(self, epochs: int = 10, steps_per_epoch: int = 100) -> tf.Tensor:
+    grad = tape.gradient(loss, self.image)
+    return loss, grad, style_loss, content_loss
+
+  def train(self, epochs: int = 10, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs.
 
@@ -228,10 +203,24 @@ class StyleTransfer():
     Returns:
     tf.Tensor: The final image tensor after training.
     """
+    style_losses = []
+    content_losses = []
+
     for epoch in range(epochs):
-      print(f"Epoch: {epoch+1}", end="")
+      print(f"Epoch {epoch}:\t", end="")
       for _ in range(steps_per_epoch):
-          self.train_step(self.image)
+          _, grad, style_loss, content_loss = self.train_step(total_variation_weight)
+          
+          style_losses.append(style_loss)
+          content_losses.append(content_loss)
+
+          self.opt.apply_gradients([(grad, self.image)])
+          self.image.assign(clip_0_1(self.image))
+
           print(".", end='', flush=True)
-      print("")
+      print(f'\tstyle loss: {style_losses[-1]}\tcontent loss: {content_losses[-1]}')
+
+    if visuals:
+      plot_losses(style_losses, content_losses)
+
     return self.image
