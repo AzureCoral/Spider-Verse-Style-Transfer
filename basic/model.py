@@ -192,7 +192,7 @@ class StyleTransfer():
     grad = tape.gradient(loss, self.image)
     return loss, grad, style_loss, content_loss
 
-  def train(self, epochs: int = 10, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
+  def train(self, epochs: int = 15, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs.
 
@@ -206,8 +206,10 @@ class StyleTransfer():
     style_losses = []
     content_losses = []
 
+    epoch_len = len(str(epochs-1))
+
     for epoch in range(epochs):
-      print(f"Epoch {epoch}:\t", end="")
+      print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
       for _ in range(steps_per_epoch):
           _, grad, style_loss, content_loss = self.train_step(total_variation_weight)
           
