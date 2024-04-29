@@ -220,7 +220,7 @@ class StyleTransfer():
           self.image.assign(clip_0_1(self.image))
 
           print(".", end='', flush=True)
-      print(f'\tstyle loss: {style_losses[-1]}\tcontent loss: {content_losses[-1]}')
+      print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
 
     if visuals:
       plot_losses(style_losses, content_losses)
