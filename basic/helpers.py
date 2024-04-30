@@ -47,6 +47,12 @@ def load_img(path_to_img: str) -> tf.Tensor:
   img = img[tf.newaxis, :]
   return img
 
+def avg_gram(gram_list_dict: dict):
+  avg_dict = {}
+  for gram_list in gram_list_dict:
+    avg_dict[gram_list] = tf.mean(gram_list_dict[gram_list])
+  return avg_dict
+
 def plot_losses(style_losses: List[float], content_losses: List[float]) -> None:
   """
   Plots the style and content losses using matplotlib.
