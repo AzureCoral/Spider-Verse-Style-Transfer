@@ -5,11 +5,16 @@ from model import StyleTransfer
 def main():
     # Load the content and style images:
     print("Loading images", end='\r', flush=True)
-    style_path = tf.keras.utils.get_file('Gwen.jpg', 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist')
-    content_path = tf.keras.utils.get_file('Mona_lisa.jpg','https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg')
+    #style_path = tf.keras.utils.get_file('Gwen.jpg', 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist')
+    style_links = {
+        'Gwen1': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist',
+        'Gwen2': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist'}
+    style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
 
+    content_path = tf.keras.utils.get_file('Mona_lisa.jpg','https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg')
     content_image = load_img(content_path)
-    style_image = load_img(style_path)
+    #style_image = load_img(style_path)
+    style_images = [load_img(style_path) for style_path in style_paths]
     print("Images loaded.")
 
     # Define content and style representations

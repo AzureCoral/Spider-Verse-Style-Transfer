@@ -39,13 +39,16 @@ def create_images(path: str, save_path: str, start_time: str, end_time: str, num
 
     while init_count < num_imgs and curr_time < end_time_sec:
         video.set(cv2.CAP_PROP_POS_MSEC, out_img_count*sampling_rate*1000+start_time_sec*1000)
-        _, image = video.read()
-        cv2.imwrite(f"{save_path}/frame{out_img_count}.jpg", image)
+        success, image = video.read()
+        if success:
+                cv2.imwrite(f"{save_path}/frame{out_img_count}.jpg", image)
+
         out_img_count += 1
         init_count += 1
         curr_time += sampling_rate
 
     video.release()
+
 
 def convert_time_to_sec(time: str) -> int:
     """

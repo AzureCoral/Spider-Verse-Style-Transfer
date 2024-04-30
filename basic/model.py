@@ -134,7 +134,7 @@ class StyleContentModel(tf.keras.models.Model):
     return {'content': content_dict, 'style': style_dict}
 
 class StyleTransfer():
-  def __init__(self, style_layers: List[str], content_layers: List[str], style_image: tf.Tensor, content_image: tf.Tensor):
+  def __init__(self, style_layers: List[str], content_layers: List[str], style_images: List[tf.Tensor], content_image: tf.Tensor):
     """
     Initializes the StyleTransfer.
 
@@ -145,7 +145,16 @@ class StyleTransfer():
     content_image (tf.Tensor): The content image tensor.
     """
     self.extractor = StyleContentModel(style_layers, content_layers)
-    self.style_targets = self.extractor(style_image)['style']
+    self.style_targets = {}
+    for layer in style_layers: 
+      self.style_targets[layer] = []
+    
+    for style_image in style_images:
+      style_target = self.extractor(style_image)['style']
+      for key in style_target: 
+        self.style_targets[key].append(style_target[key])
+
+    self.style_targets = avg_gram(self.style_targets)
     self.content_targets = self.extractor(content_image)['content']
     if platform.system() == "Darwin" and platform.processor() == "arm":
         self.opt = tf.keras.optimizers.legacy.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
@@ -192,7 +201,7 @@ class StyleTransfer():
     grad = tape.gradient(loss, self.image)
     return loss, grad, style_loss, content_loss
 
-  def train(self, epochs: int = 10, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
+  def train(self, epochs: int = 15, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs.
 
@@ -206,8 +215,10 @@ class StyleTransfer():
     style_losses = []
     content_losses = []
 
+    epoch_len = len(str(epochs-1))
+
     for epoch in range(epochs):
-      print(f"Epoch {epoch}:\t", end="")
+      print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
       for _ in range(steps_per_epoch):
           _, grad, style_loss, content_loss = self.train_step(total_variation_weight)
           
@@ -218,7 +229,7 @@ class StyleTransfer():
           self.image.assign(clip_0_1(self.image))
 
           print(".", end='', flush=True)
-      print(f'\tstyle loss: {style_losses[-1]}\tcontent loss: {content_losses[-1]}')
+      print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
 
     if visuals:
       plot_losses(style_losses, content_losses)
