@@ -1,4 +1,5 @@
 import cv2
+import os
 
 def create_images(path: str, save_path: str, start_time: str, end_time: str, num_imgs: int = 10):
     """
@@ -15,7 +16,18 @@ def create_images(path: str, save_path: str, start_time: str, end_time: str, num
         None
 
     """
+    if len(os.listdir(save_path)) > 0:
+        out_img_count = len(os.listdir(save_path))
+    else:
+        out_img_count = 0
+
+    init_count = 0
+
     video = cv2.VideoCapture(path)
+
+    if not video.isOpened():
+        print("Error opening video file")
+        return
 
     start_time_sec = convert_time_to_sec(start_time)
     end_time_sec = convert_time_to_sec(end_time)
@@ -23,14 +35,14 @@ def create_images(path: str, save_path: str, start_time: str, end_time: str, num
     video.set(cv2.CAP_PROP_POS_MSEC, start_time_sec*1000)
     sampling_rate = (end_time_sec-start_time_sec)/num_imgs
 
-    out_img_count = 0
     curr_time = start_time_sec
 
-    while out_img_count < num_imgs and curr_time < end_time_sec:
+    while init_count < num_imgs and curr_time < end_time_sec:
         video.set(cv2.CAP_PROP_POS_MSEC, out_img_count*sampling_rate*1000+start_time_sec*1000)
         _, image = video.read()
         cv2.imwrite(f"{save_path}/frame{out_img_count}.jpg", image)
         out_img_count += 1
+        init_count += 1
         curr_time += sampling_rate
 
     video.release()
@@ -52,11 +64,11 @@ def convert_time_to_sec(time: str) -> int:
 
 
 if __name__ == "__main__":
-    path = "start_path"
-    save_path = "data/gwen_universe"
-    start_time = "00:02:43"
-    end_time = "00:09:06"
-    num_imgs = 10
+    path = "path_to_video"
+    save_path = "path_to_data"
+    start_time = "00:00:00"
+    end_time = "00:02:55"
+    num_imgs = 150
 
     create_images(path, save_path, start_time, end_time, num_imgs)
 
