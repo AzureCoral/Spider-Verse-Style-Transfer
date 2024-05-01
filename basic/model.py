@@ -1,6 +1,7 @@
 import platform
 import tensorflow as tf
 from helpers import *
+import TransferCNN from ../transfer-learning/models.py
 
 from typing import List, Dict
 
@@ -40,12 +41,13 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
   tf.keras.Model: The resulting VGG model.
   """
   # Load our model. Load pretrained VGG, trained on ImageNet data
-  vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  vgg.trainable = False
-  
-  outputs = [vgg.get_layer(name).output for name in layer_names]
+  #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
+  #vgg.trainable = False
+  #
+  #outputs = [vgg.get_layer(name).output for name in layer_names]
 
-  model = tf.keras.Model([vgg.input], outputs)
+  #model = tf.keras.Model([vgg.input], outputs)
+  model = TransferCNN()
   return model
 
 def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:

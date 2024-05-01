@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 import cv2
 import os
-import tqdm
+from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 
@@ -22,32 +22,36 @@ def get_data(all_data_folder: str) -> Tuple[np.ndarray, np.ndarray]:
 
     mapping = create_mapping(all_data_folder)
 
-    for folder in tqdm.tqdm(os.listdir(all_data_folder)):
+    for folder in os.listdir(all_data_folder):
         universe_data = os.path.join(all_data_folder, folder)
         universe_class = mapping[folder] 
 
-        for file in os.listdir(universe_data):
-            file_path = os.path.join(universe_data, file)
+        for file in tqdm(os.listdir(universe_data)):
+            if file != ".DS_Store":
+                file_path = os.path.join(universe_data, file)
 
-            img = cv2.imread(file_path)
+                img = cv2.imread(file_path)
+                img = np.array(img, dtype=np.float64)
 
-            if img:
-                print(img.shape)
                 #img = np.reshape(img, ())
-                img /= 255.0
+                normalized_img = img/np.float64(255)
 
-                images.append(img)
+                images.append(normalized_img)
                 labels.append(universe_class)
 
     return np.array(images), np.array(labels)
 
 
 def create_mapping(all_data_folder: str) -> Dict[str, int]:
+    assert NUM_CLASSES == len(os.listdir(all_data_folder))
+
     mapping = {}
 
     one_hot_vectors = tf.one_hot(tf.range(NUM_CLASSES), NUM_CLASSES)
 
     for folder, vec in zip(os.listdir(all_data_folder), one_hot_vectors):
         mapping[folder] = vec
+
+    assert len(mapping) == NUM_CLASSES
 
     return mapping
