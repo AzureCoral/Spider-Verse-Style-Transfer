@@ -74,4 +74,3 @@ if __name__ == "__main__":
     num_imgs = 150
 
     create_images(path, save_path, start_time, end_time, num_imgs)
-

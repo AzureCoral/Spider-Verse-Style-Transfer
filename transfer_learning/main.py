@@ -5,7 +5,7 @@ import tensorflow as tf
 CHECKPOINT_PATH = "./checkpoints"
 
 def main():
-    all_data_folder = "data"
+    all_data_folder = "transfer-learning/data"
     print("Starting Preprocessing...")
     images, labels = get_data(all_data_folder)
     print("Finished Preprocessing!")

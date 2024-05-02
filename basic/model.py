@@ -1,7 +1,7 @@
-import platform
 import tensorflow as tf
+import platform
 from helpers import *
-
+# from transfer_learning import TransferCNN
 
 from typing import List, Dict
 
@@ -41,15 +41,13 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
   tf.keras.Model: The resulting VGG model.
   """
   # Load our model. Load pretrained VGG, trained on ImageNet data
-  vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  vgg.trainable = False
+  #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
+  #vgg.trainable = False
+  #
+  #outputs = [vgg.get_layer(name).output for name in layer_names]
 
-  vgg.summary()
-  print(len(layer_names))
-  
-  outputs = [vgg.get_layer(name).output for name in layer_names]
-
-  model = tf.keras.Model([vgg.input], outputs)
+  #model = tf.keras.Model([vgg.input], outputs)
+  model = TransferCNN()
   return model
 
 def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
@@ -149,16 +147,27 @@ class StyleTransfer():
     content_image (tf.Tensor): The content image tensor.
     """
     self.extractor = StyleContentModel(style_layers, content_layers)
+    
     self.style_targets = {}
     for layer in style_layers: 
       self.style_targets[layer] = []
-    
     for style_image in style_images:
       style_target = self.extractor(style_image)['style']
       for key in style_target: 
         self.style_targets[key].append(style_target[key])
-
     self.style_targets = avg_gram(self.style_targets)
+
+    # self.style_targets = {
+    #   style_layer : 
+    #   tf.mean(
+    #     list(map(
+    #       lambda img: img[style_layer],
+    #       [self.extractor(style_image)['style'] for style_image in style_images]
+    #     ))
+    #   ) 
+    #   for style_layer in style_layers
+    # }
+
     self.content_targets = self.extractor(content_image)['content']
     if platform.system() == "Darwin" and platform.processor() == "arm":
         self.opt = tf.keras.optimizers.legacy.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
