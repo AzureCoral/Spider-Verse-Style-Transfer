@@ -4,7 +4,7 @@ from model import StyleTransfer
 import time
 from typing import Dict, List
 
-def style_transfer(style_links: Dict[str, str], content_link: str, visuals: bool = False) -> None:
+def style_transfer(style_links: Dict[str, str], content_link: Dict[str, str], visuals: bool = False) -> None:
     """
     Performs style transfer from the style images to the content image.
 
@@ -15,7 +15,8 @@ def style_transfer(style_links: Dict[str, str], content_link: str, visuals: bool
     """
     # Load the content and style images:
     print("Loading images", end='\r', flush=True)
-    content_path = tf.keras.utils.get_file('content', content_link)
+    content_title, content_link = list(content_link.items())[0]
+    content_path = tf.keras.utils.get_file(content_title, content_link)
     style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
     content_image = load_img(content_path)
     style_images = [load_img(style_path) for style_path in style_paths]
@@ -36,16 +37,16 @@ def style_transfer(style_links: Dict[str, str], content_link: str, visuals: bool
 
     # Initialize the model:
     print("Initializing model", end='\r', flush=True)
-    model = StyleTransfer(style_layers, content_layers, style_images, content_image)
+    model = StyleTransfer(style_layers, content_layers, style_images, content_image, 1e-2, 1e4)
     print("Model initialized.")
 
     # Train the model:
     print("\nTraining model:")
-    img = model.train(visuals=visuals)    
+    img = model.train(epochs=10, visuals=visuals)    
     print("\nModel trained.")
 
     # Save the output image:
-    output_file_path = "basic/output/Gwen{}.jpg".format(int(time.time()))
+    output_file_path = f"basic/output/{content_title}_{int(time.time())}.jpg"
     print("Saving the output image", end='\r', flush=True)
     with open(output_file_path,'wb') as f:
         tensor_to_image(img).save(f, "JPEG")
@@ -110,10 +111,12 @@ def main():
         'Gwen4': 'https://static.wikia.nocookie.net/intothespiderverse/images/d/d9/Fightingthelizard.jpg/revision/latest/scale-to-width-down/1000?cb=20230928231607',
         'Gwen5': 'https://static.wikia.nocookie.net/intothespiderverse/images/f/f7/Gwenpeter.jpg/revision/latest/scale-to-width-down/1000?cb=20230927002716'
     }
-    content_link = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
+    content_link = {
+        'MonaLisa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
+    }
 
-    # style_transfer(style_links, content_link, True)
-    hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
+    style_transfer(style_links, content_link, True)
+    # hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
     
 if __name__ == "__main__":
     main()
