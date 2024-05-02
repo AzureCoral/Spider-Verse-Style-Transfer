@@ -113,7 +113,7 @@ def main():
     content_link = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
 
     # style_transfer(style_links, content_link, True)
-    hyperparameter_search(style_links, content_link, [1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
+    hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
     
 if __name__ == "__main__":
     main()
