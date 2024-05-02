@@ -1,9 +1,17 @@
 import platform
 import tensorflow as tf
 from helpers import *
-
+import sys
+import os
 
 from typing import List, Dict
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from models import TransferCNN
+
+
+IMAGE_SIZE = (224,224,3)
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
   """
@@ -41,15 +49,42 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
   tf.keras.Model: The resulting VGG model.
   """
   # Load our model. Load pretrained VGG, trained on ImageNet data
-  vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  vgg.trainable = False
+  #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
+  #vgg.trainable = False
+  #
+  #outputs = [vgg.get_layer(name).output for name in layer_names]
 
-  vgg.summary()
-  print(len(layer_names))
+  #model = tf.keras.Model([vgg.input], outputs)
+  weights_path = "../transfer-learning/checkpoints"
+  model_path = "../checkpoints"
+
+  model = TransferCNN(input_shape=IMAGE_SIZE)
   
-  outputs = [vgg.get_layer(name).output for name in layer_names]
+  # Load the pre-trained weights
+  loaded_model = tf.keras.models.load_model('../checkpoints/weights_new_keras.keras', custom_objects={'TransferCNN': TransferCNN})
+  
+  # Set the VGG layers as non-trainable
+  dummy_input = tf.ones((1,) + tuple(IMAGE_SIZE))
+  
+  # Call the model once to build the architecture
+  loaded_model(dummy_input)
+  loaded_model.vgg(dummy_input)
 
-  model = tf.keras.Model([vgg.input], outputs)
+  for layer in loaded_model.vgg.layers:
+      layer.trainable = False
+
+  for layer in loaded_model.layers:
+      layer.trainable = False
+
+  loaded_model.summary()
+
+  print(loaded_model.vgg.input) 
+  # Get the required layer outputs
+  outputs = [loaded_model.get_layer('vgg19').get_layer(name).output for name in layer_names]
+  
+  # Create a new model with the desired outputs
+  model = tf.keras.Model(inputs=loaded_model.input, outputs=outputs)
+  
   return model
 
 def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
@@ -138,7 +173,7 @@ class StyleContentModel(tf.keras.models.Model):
     return {'content': content_dict, 'style': style_dict}
 
 class StyleTransfer():
-  def __init__(self, style_layers: List[str], content_layers: List[str], style_images: List[tf.Tensor], content_image: tf.Tensor):
+  def __init__(self, style_layers: List[str], content_layers: List[str], style_image: tf.Tensor, content_image: tf.Tensor):
     """
     Initializes the StyleTransfer.
 
@@ -149,16 +184,7 @@ class StyleTransfer():
     content_image (tf.Tensor): The content image tensor.
     """
     self.extractor = StyleContentModel(style_layers, content_layers)
-    self.style_targets = {}
-    for layer in style_layers: 
-      self.style_targets[layer] = []
-    
-    for style_image in style_images:
-      style_target = self.extractor(style_image)['style']
-      for key in style_target: 
-        self.style_targets[key].append(style_target[key])
-
-    self.style_targets = avg_gram(self.style_targets)
+    self.style_targets = self.extractor(style_image)['style']
     self.content_targets = self.extractor(content_image)['content']
     if platform.system() == "Darwin" and platform.processor() == "arm":
         self.opt = tf.keras.optimizers.legacy.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
@@ -205,7 +231,7 @@ class StyleTransfer():
     grad = tape.gradient(loss, self.image)
     return loss, grad, style_loss, content_loss
 
-  def train(self, epochs: int = 15, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
+  def train(self, epochs: int = 10, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs.
 
@@ -219,10 +245,8 @@ class StyleTransfer():
     style_losses = []
     content_losses = []
 
-    epoch_len = len(str(epochs-1))
-
     for epoch in range(epochs):
-      print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
+      print(f"Epoch {epoch}:\t", end="")
       for _ in range(steps_per_epoch):
           _, grad, style_loss, content_loss = self.train_step(total_variation_weight)
           
@@ -233,7 +257,7 @@ class StyleTransfer():
           self.image.assign(clip_0_1(self.image))
 
           print(".", end='', flush=True)
-      print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
+      print(f'\tstyle loss: {style_losses[-1]}\tcontent loss: {content_losses[-1]}')
 
     if visuals:
       plot_losses(style_losses, content_losses)

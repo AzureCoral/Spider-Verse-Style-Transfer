@@ -4,6 +4,7 @@ import os
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
+from keras.applications.vgg19 import preprocess_input
 
 NUM_CLASSES = 5
 
@@ -31,12 +32,10 @@ def get_data(all_data_folder: str) -> Tuple[np.ndarray, np.ndarray]:
                 file_path = os.path.join(universe_data, file)
 
                 img = cv2.imread(file_path)
-                img = np.array(img, dtype=np.float64)
+                img = cv2.resize(img, (224, 224))
+                img = preprocess_input(img)
 
-                #img = np.reshape(img, ())
-                normalized_img = img/np.float64(255)
-
-                images.append(normalized_img)
+                images.append(img)
                 labels.append(universe_class)
 
     return np.array(images), np.array(labels)
