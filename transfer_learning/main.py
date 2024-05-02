@@ -11,7 +11,6 @@ def main():
     images, labels = get_data(all_data_folder)
     print("Finished Preprocessing!")
 
-
     model = TransferCNN()
 
     print("Starting Training...")

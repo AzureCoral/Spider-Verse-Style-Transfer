@@ -32,8 +32,8 @@ def get_data(all_data_folder: str) -> Tuple[np.ndarray, np.ndarray]:
                 file_path = os.path.join(universe_data, file)
 
                 img = cv2.imread(file_path)
-                img = cv2.resize(img, (224, 224))
-                img = preprocess_input(img)
+
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                 images.append(img)
                 labels.append(universe_class)
