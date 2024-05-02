@@ -1,7 +1,6 @@
 import tensorflow as tf
 import platform
 from helpers import *
-# from transfer_learning import TransferCNN
 
 from typing import List, Dict
 
@@ -40,14 +39,13 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
   Returns:
   tf.keras.Model: The resulting VGG model.
   """
-  # Load our model. Load pretrained VGG, trained on ImageNet data
-  #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  #vgg.trainable = False
-  #
-  #outputs = [vgg.get_layer(name).output for name in layer_names]
+  vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
+  vgg.trainable = False
+  
+  outputs = [vgg.get_layer(name).output for name in layer_names]
 
-  #model = tf.keras.Model([vgg.input], outputs)
-  model = TransferCNN()
+  model = tf.keras.Model([vgg.input], outputs)
+
   return model
 
 def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
@@ -60,7 +58,6 @@ def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
   Returns:
   tf.Tensor: The resulting Gram matrix.
   """
-  # outer_product = tf.matmul(input_tensor, input_tensor, transpose_a=True)
   outer_product = tf.linalg.einsum('bijc,bijd->bcd', input_tensor, input_tensor)
   
   input_shape = tf.shape(input_tensor)
@@ -157,16 +154,8 @@ class StyleTransfer():
         self.style_targets[key].append(style_target[key])
     self.style_targets = avg_gram(self.style_targets)
 
-    # self.style_targets = {
-    #   style_layer : 
-    #   tf.mean(
-    #     list(map(
-    #       lambda img: img[style_layer],
-    #       [self.extractor(style_image)['style'] for style_image in style_images]
-    #     ))
-    #   ) 
-    #   for style_layer in style_layers
-    # }
+    # img_styles = [self.extractor(style_image)['style'] for style_image in style_images]
+    # self.style_targets = {style_layer : tf.keras.layers.average([img[style_layer] for img in img_styles]) for style_layer in style_layers}
 
     self.content_targets = self.extractor(content_image)['content']
     if platform.system() == "Darwin" and platform.processor() == "arm":
@@ -202,7 +191,7 @@ class StyleTransfer():
     return calculate_loss(content_outputs, self.content_targets, content_weight)
   
   @tf.function()
-  def train_step(self, total_variation_weight: float = 30):
+  def train_step(self, total_variation_weight: float = 100):
     with tf.GradientTape() as tape:
       outputs = self.extractor(self.image)
       

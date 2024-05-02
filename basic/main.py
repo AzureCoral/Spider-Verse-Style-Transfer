@@ -1,6 +1,7 @@
 import tensorflow as tf
 from helpers import *
 from model import StyleTransfer
+import time
 from typing import Dict, List
 
 def style_transfer(style_links: Dict[str, str], content_link: str, visuals: bool = False) -> None:
@@ -44,26 +45,22 @@ def style_transfer(style_links: Dict[str, str], content_link: str, visuals: bool
     print("\nModel trained.")
 
     # Save the output image:
-    output_file_path = "results/unbatched/basic_gwen.jpg"
+    output_file_path = "basic/output/Gwen{}.jpg".format(int(time.time()))
     print("Saving the output image", end='\r', flush=True)
     with open(output_file_path,'wb') as f:
         tensor_to_image(img).save(f, "JPEG")
     print(f"Output image saved at {output_file_path}")
 
 def main():
-    # style_links = {
-    #     'Gwen1': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist',
-    #     'Gwen2': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist'
-    # }
-    # content_link = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
-    
-    # style_transfer(style_links, content_link, True)
-
     style_links = {
-        'Gwen1': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist'
+        'Gwen1': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist',
+        'Gwen2': 'https://static.wikia.nocookie.net/intothespiderverse/images/1/12/Gwenleavesband.jpg/revision/latest/scale-to-width-down/1000?cb=20230927002710',
+        'Gwen3': 'https://static.wikia.nocookie.net/intothespiderverse/images/1/1b/Rippeter.jpg/revision/latest/scale-to-width-down/1000?cb=20230927003040',
+        'Gwen4': 'https://static.wikia.nocookie.net/intothespiderverse/images/d/d9/Fightingthelizard.jpg/revision/latest/scale-to-width-down/1000?cb=20230928231607',
+        'Gwen5': 'https://static.wikia.nocookie.net/intothespiderverse/images/f/f7/Gwenpeter.jpg/revision/latest/scale-to-width-down/1000?cb=20230927002716'
     }
     content_link = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
-    
+
     style_transfer(style_links, content_link, True)
     
 if __name__ == "__main__":
