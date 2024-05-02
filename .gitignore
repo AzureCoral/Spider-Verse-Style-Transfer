@@ -42,8 +42,5 @@ Icon?
 
 outputs/*
 transfer_learning/data/*
-<<<<<<< HEAD
 transfer_learning/checkpoints/*
 !transfer_learning/checkpoints/weights_new_keras.keras
-=======
->>>>>>> abc5f995b1aabdcd1ef19a0028dd4c0bee500c9c
