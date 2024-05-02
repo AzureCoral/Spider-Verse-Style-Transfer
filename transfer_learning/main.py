@@ -3,9 +3,10 @@ from models import TransferCNN
 import tensorflow as tf
 
 CHECKPOINT_PATH = "./checkpoints"
+IMAGE_SIZE = (224,224,3)
 
 def main():
-    all_data_folder = "transfer-learning/data"
+    all_data_folder = "data"
     print("Starting Preprocessing...")
     images, labels = get_data(all_data_folder)
     print("Finished Preprocessing!")

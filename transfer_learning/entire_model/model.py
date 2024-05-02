@@ -39,53 +39,50 @@ def mse(x: tf.Tensor, y: tf.Tensor) -> tf.Tensor:
   return tf.reduce_mean((x - y)**2)
 
 def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
-  """
-  Creates a VGG model that returns a list of intermediate output values.
+    """
+    Creates a VGG model that returns a list of intermediate output values.
 
-  Parameters:
-  layer_names (List[str]): The names of the layers to include in the model.
+    Parameters:
+    layer_names (List[str]): The names of the layers to include in the model.
 
-  Returns:
-  tf.keras.Model: The resulting VGG model.
-  """
-  # Load our model. Load pretrained VGG, trained on ImageNet data
-  #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  #vgg.trainable = False
-  #
-  #outputs = [vgg.get_layer(name).output for name in layer_names]
+    Returns:
+    tf.keras.Model: The resulting VGG model.
+    """
+    # Load our model. Load pretrained VGG, trained on ImageNet data
+    #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
+    #vgg.trainable = False
+    #
+    #outputs = [vgg.get_layer(name).output for name in layer_names]
 
-  #model = tf.keras.Model([vgg.input], outputs)
-  weights_path = "../transfer-learning/checkpoints"
-  model_path = "../checkpoints"
+    #model = tf.keras.Model([vgg.input], outputs)
+    weights_path = "../transfer-learning/checkpoints"
+    model_path = "../checkpoints"
 
-  model = TransferCNN(input_shape=IMAGE_SIZE)
-  
-  # Load the pre-trained weights
-  loaded_model = tf.keras.models.load_model('../checkpoints/weights_new_keras.keras', custom_objects={'TransferCNN': TransferCNN})
-  
-  # Set the VGG layers as non-trainable
-  dummy_input = tf.ones((1,) + tuple(IMAGE_SIZE))
-  
-  # Call the model once to build the architecture
-  loaded_model(dummy_input)
-  loaded_model.vgg(dummy_input)
+    model = TransferCNN()
 
-  for layer in loaded_model.vgg.layers:
-      layer.trainable = False
+    loaded_model = tf.keras.models.load_model('../checkpoints/weights_new_keras.keras', custom_objects={'TransferCNN': TransferCNN})
 
-  for layer in loaded_model.layers:
-      layer.trainable = False
+    # Assuming the input layer is the first layer
+    input_layer = loaded_model.layers[0].input
 
-  loaded_model.summary()
+    dummy_input = tf.ones((1,) + tuple(IMAGE_SIZE))
 
-  print(loaded_model.vgg.input) 
-  # Get the required layer outputs
-  outputs = [loaded_model.get_layer('vgg19').get_layer(name).output for name in layer_names]
-  
-  # Create a new model with the desired outputs
-  model = tf.keras.Model(inputs=loaded_model.input, outputs=outputs)
-  
-  return model
+    loaded_model.call(dummy_input)
+
+    # Set the VGG layers as non-trainable
+    for layer in loaded_model.vgg.layers:
+        layer.trainable = False
+
+    for layer in loaded_model.layers:
+        layer.trainable = False
+
+    loaded_model.summary()
+
+    outputs = [loaded_model.get_layer('vgg19').get_layer(name).output for name in layer_names]
+
+    model = tf.keras.Model(inputs=input_layer, outputs=outputs)
+
+    return model
 
 def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
   """
@@ -184,6 +181,8 @@ class StyleTransfer():
     content_image (tf.Tensor): The content image tensor.
     """
     self.extractor = StyleContentModel(style_layers, content_layers)
+    print(style_image.shape)
+    print(content_image.shape)
     self.style_targets = self.extractor(style_image)['style']
     self.content_targets = self.extractor(content_image)['content']
     if platform.system() == "Darwin" and platform.processor() == "arm":
