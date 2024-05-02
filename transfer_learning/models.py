@@ -66,5 +66,4 @@ class TransferCNN(tf.keras.Model):
 
     @classmethod
     def from_config(cls, config):
-        # Create and return an instance of TransferCNN without the input_shape parameter
         return cls()

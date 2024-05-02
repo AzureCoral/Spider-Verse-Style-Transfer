@@ -48,37 +48,21 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
     Returns:
     tf.keras.Model: The resulting VGG model.
     """
-    # Load our model. Load pretrained VGG, trained on ImageNet data
-    #vgg = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-    #vgg.trainable = False
-    #
-    #outputs = [vgg.get_layer(name).output for name in layer_names]
-
-    #model = tf.keras.Model([vgg.input], outputs)
-    weights_path = "../transfer-learning/checkpoints"
-    model_path = "../checkpoints"
-
     model = TransferCNN()
 
     loaded_model = tf.keras.models.load_model('../checkpoints/weights_new_keras.keras', custom_objects={'TransferCNN': TransferCNN})
 
+    loaded_model = loaded_model.vgg
+
     # Assuming the input layer is the first layer
-    input_layer = loaded_model.layers[0].input
-
-    dummy_input = tf.ones((1,) + tuple(IMAGE_SIZE))
-
-    loaded_model.call(dummy_input)
-
-    # Set the VGG layers as non-trainable
-    for layer in loaded_model.vgg.layers:
-        layer.trainable = False
+    input_layer = loaded_model.input
 
     for layer in loaded_model.layers:
         layer.trainable = False
 
     loaded_model.summary()
 
-    outputs = [loaded_model.get_layer('vgg19').get_layer(name).output for name in layer_names]
+    outputs = [loaded_model.get_layer(name).output for name in layer_names]
 
     model = tf.keras.Model(inputs=input_layer, outputs=outputs)
 
