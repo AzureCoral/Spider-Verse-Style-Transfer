@@ -133,7 +133,13 @@ class StyleContentModel(tf.keras.models.Model):
     return {'content': content_dict, 'style': style_dict}
 
 class StyleTransfer():
-  def __init__(self, style_layers: List[str], content_layers: List[str], style_images: List[tf.Tensor], content_image: tf.Tensor):
+  def __init__(self, style_layers: List[str], 
+               content_layers: List[str], 
+               style_images: List[tf.Tensor], 
+               content_image: tf.Tensor, 
+               style_weight: float = 1e-2,
+               content_weight: float = 1e4,
+               total_variation_weight: float = 100):
     """
     Initializes the StyleTransfer.
 
@@ -142,6 +148,9 @@ class StyleTransfer():
     content_layers (List[str]): The names of the content layers to include in the model.
     style_image (tf.Tensor): The style image tensor.
     content_image (tf.Tensor): The content image tensor.
+    style_weight (float): The weight of the style loss.
+    content_weight (float): The weight of the content loss.
+    
     """
     self.extractor = StyleContentModel(style_layers, content_layers)
     
@@ -163,47 +172,49 @@ class StyleTransfer():
     else:
         self.opt = tf.keras.optimizers.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
     self.image = tf.Variable(content_image)
+
+    self.style_weight = style_weight
+    self.content_weight = content_weight
+    self.total_variation_weight = total_variation_weight
   
-  def style_loss(self, style_outputs: Dict[str, tf.Tensor], style_weight: float = 1e-2) -> tf.Tensor:
+  def style_loss(self, style_outputs: Dict[str, tf.Tensor]) -> tf.Tensor:
     """
     Calculates the style loss.
 
     Parameters:
     style_outputs (Dict[str, tf.Tensor]): The style outputs.
-    style_weight (float): The weight of the style loss.
 
     Returns:
     tf.Tensor: The style loss.
     """
-    return calculate_loss(style_outputs, self.style_targets, style_weight)
+    return calculate_loss(style_outputs, self.style_targets, self.style_weight)
 
-  def content_loss(self, content_outputs: Dict[str, tf.Tensor], content_weight: float = 1e4) -> tf.Tensor:
+  def content_loss(self, content_outputs: Dict[str, tf.Tensor]) -> tf.Tensor:
     """
     Calculates the content loss.
 
     Parameters:
     content_outputs (Dict[str, tf.Tensor]): The content outputs.
-    content_weight (float): The weight of the content loss.
 
     Returns:
     tf.Tensor: The content loss.
     """
-    return calculate_loss(content_outputs, self.content_targets, content_weight)
+    return calculate_loss(content_outputs, self.content_targets, self.content_weight)
   
   @tf.function()
-  def train_step(self, total_variation_weight: float = 100):
+  def train_step(self):
     with tf.GradientTape() as tape:
       outputs = self.extractor(self.image)
       
       style_loss = self.style_loss(outputs['style'])
       content_loss = self.content_loss(outputs['content'])
 
-      loss = style_loss + content_loss + total_variation_weight*tf.image.total_variation(self.image)
+      loss = style_loss + content_loss + self.total_variation_weight*tf.image.total_variation(self.image)
 
     grad = tape.gradient(loss, self.image)
     return loss, grad, style_loss, content_loss
 
-  def train(self, epochs: int = 15, steps_per_epoch: int = 100, total_variation_weight: float = 30, visuals: bool = False) -> tf.Tensor:
+  def train(self, epochs: int = 15, steps_per_epoch: int = 100, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs.
 
@@ -222,7 +233,7 @@ class StyleTransfer():
     for epoch in range(epochs):
       print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
       for _ in range(steps_per_epoch):
-          _, grad, style_loss, content_loss = self.train_step(total_variation_weight)
+          _, grad, style_loss, content_loss = self.train_step()
           
           style_losses.append(style_loss)
           content_losses.append(content_loss)
