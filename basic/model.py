@@ -215,36 +215,39 @@ class StyleTransfer():
     return loss, grad, style_loss, content_loss
 
   def train(self, epochs: int = 15, steps_per_epoch: int = 100, visuals: bool = False) -> tf.Tensor:
-    """
-    Trains the model for a specified number of epochs.
+      """
+      Trains the model for a specified number of epochs.
 
-    Parameters:
-    epochs (int): The number of epochs to train for.
-    steps_per_epoch (int): The number of steps per epoch.
+      Parameters:
+      epochs (int): The number of epochs to train for.
+      steps_per_epoch (int): The number of steps per epoch.
 
-    Returns:
-    tf.Tensor: The final image tensor after training.
-    """
-    style_losses = []
-    content_losses = []
+      Returns:
+      tf.Tensor: The final image tensor after training.
+      """
+      style_losses = []
+      content_losses = []
 
-    epoch_len = len(str(epochs-1))
+      epoch_len = len(str(epochs-1))
 
-    for epoch in range(epochs):
-      print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
-      for _ in range(steps_per_epoch):
-          _, grad, style_loss, content_loss = self.train_step()
-          
-          style_losses.append(style_loss)
-          content_losses.append(content_loss)
+      for epoch in range(epochs):
+          print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
+          for step in range(steps_per_epoch):
+              _, grad, style_loss, content_loss = self.train_step()
 
-          self.opt.apply_gradients([(grad, self.image)])
-          self.image.assign(clip_0_1(self.image))
+              style_losses.append(style_loss)
+              content_losses.append(content_loss)
 
-          print(".", end='', flush=True)
-      print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
+              self.opt.apply_gradients([(grad, self.image)])
+              self.image.assign(clip_0_1(self.image))
 
-    if visuals:
-      plot_losses(style_losses, content_losses)
+            
+              print(f"\rEpoch {epoch:0>{epoch_len}}: ({step + 1}/{steps_per_epoch})", end='', flush=True)
 
-    return self.image
+          print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
+
+      if visuals:
+          plot_losses(style_losses, content_losses)
+
+      return self.image
+
