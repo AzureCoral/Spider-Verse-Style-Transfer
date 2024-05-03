@@ -1,8 +1,10 @@
 import tensorflow as tf
 import platform
 from helpers import *
-
+import imageio
+from IPython.display import Image, display
 from typing import List, Dict
+import time 
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
   """
@@ -214,9 +216,13 @@ class StyleTransfer():
     grad = tape.gradient(loss, self.image)
     return loss, grad, style_loss, content_loss
 
+
+  
+
+
   def train(self, epochs: int = 15, steps_per_epoch: int = 100, visuals: bool = False) -> tf.Tensor:
       """
-      Trains the model for a specified number of epochs.
+      Trains the model for a specified number of epochs, optionally creates visuals such as loss plots and a training GIF.
 
       Parameters:
       epochs (int): The number of epochs to train for.
@@ -225,29 +231,40 @@ class StyleTransfer():
       Returns:
       tf.Tensor: The final image tensor after training.
       """
-      style_losses = []
-      content_losses = []
+      style_losses, content_losses, images = [], [], []
 
       epoch_len = len(str(epochs-1))
-
+    
+      capture_steps = [25, 50, 75, 99]
       for epoch in range(epochs):
           print(f"Epoch {epoch:0>{epoch_len}}:\t", end="")
           for step in range(steps_per_epoch):
               _, grad, style_loss, content_loss = self.train_step()
-
+              
               style_losses.append(style_loss)
               content_losses.append(content_loss)
 
               self.opt.apply_gradients([(grad, self.image)])
               self.image.assign(clip_0_1(self.image))
+              if step in capture_steps and visuals == True : 
+                 # Save image at the end of each epoch
+                output_file_path = f"./gif_output/Image_{int(time.time())}.jpg"
+                with open(output_file_path,'wb') as f:
+                        tensor_to_image(self.image).save(f, "JPEG")
 
-            
+
+                images.append(imageio.imread(output_file_path))
               print(f"\rEpoch {epoch:0>{epoch_len}}: ({step + 1}/{steps_per_epoch})", end='', flush=True)
 
           print(f'\tstyle loss: {style_losses[-1]:.2f}\tcontent loss: {content_losses[-1]:.2f}')
 
+          
+
+      # Create GIF
       if visuals:
-          plot_losses(style_losses, content_losses)
+          gif_path = "./gif_output/training.gif"
+          imageio.mimsave(gif_path, images, fps=1)
+          display(Image(filename=gif_path))
+          plot_losses(style_losses, content_losses)  # Assuming plot_losses is a predefined function
 
       return self.image
-
