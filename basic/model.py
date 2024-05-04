@@ -132,14 +132,15 @@ class StyleContentModel(tf.keras.models.Model):
     return {'content': content_dict, 'style': style_dict}
 
 class StyleTransfer():
-  def __init__(self, 
-        style_layers: List[str],
-        content_layers: List[str],
-        style_images: List[tf.Tensor],
-        content_image: tf.Tensor,
-        style_weight: float = 1e-2,
-        content_weight: float = 1e4,
-        total_variation_weight: float = 100):
+  def __init__(
+      self, 
+      style_layers: List[str],
+      content_layers: List[str],
+      style_images: List[tf.Tensor],
+      content_image: tf.Tensor,
+      style_weight: float = 1e-2,
+      content_weight: float = 1e4,
+      total_variation_weight: float = 100):
     """
     Initializes the StyleTransfer.
 
@@ -215,7 +216,7 @@ class StyleTransfer():
     return loss, grad, style_loss, content_loss
 
 
-  def train(self, epochs: int = 1, steps_per_epoch: int = 25, visuals: bool = False) -> tf.Tensor:
+  def train(self, epochs: int = 60, steps_per_epoch: int = 25, visuals: bool = False) -> tf.Tensor:
     """
     Trains the model for a specified number of epochs, optionally creates visuals such as loss plots and a training GIF.
 
