@@ -1,6 +1,6 @@
 import tensorflow as tf
 import platform
-from helpers import *
+from helpers import tensor_to_image, avg_gram, plot_losses
 import imageio
 from typing import List, Dict
 import time
@@ -232,7 +232,7 @@ class StyleTransfer():
 		time_start = int(time.time())
 
 		for epoch in range(epochs):
-			if visuals == True :
+			if visuals:
 				# Save image at the end of each epoch
 				output_file_path = f"basic/gif_output/Image{time_start}_{epoch:0>{epoch_len}}.jpg"
 				with open(output_file_path,'wb') as f:
