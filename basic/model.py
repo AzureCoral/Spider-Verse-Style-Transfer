@@ -2,7 +2,6 @@ import tensorflow as tf
 import platform
 from helpers import *
 import imageio
-from IPython.display import Image, display
 from typing import List, Dict
 import time
 
