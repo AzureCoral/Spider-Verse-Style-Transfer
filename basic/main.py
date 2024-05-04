@@ -42,7 +42,7 @@ def style_transfer(style_links: Dict[str, str], content_link: Dict[str, str], vi
 
     # Train the model:
     print("\nTraining model:")
-    img = model.train(epochs=10, visuals=visuals)    
+    img = model.train(visuals=visuals)    
     print("\nModel trained.")
 
     # Save the output image:
@@ -113,6 +113,7 @@ def main():
     }
     content_link = {
         'MonaLisa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/402px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg'
+        # 'Gwen3': 'https://static.wikia.nocookie.net/intothespiderverse/images/1/1b/Rippeter.jpg/revision/latest/scale-to-width-down/1000?cb=20230927003040'
     }
 
     style_transfer(style_links, content_link, True)
