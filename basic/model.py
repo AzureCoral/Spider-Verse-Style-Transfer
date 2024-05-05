@@ -59,11 +59,14 @@ def gram_matrix(input_tensor: tf.Tensor) -> tf.Tensor:
   Returns:
   tf.Tensor: The resulting Gram matrix.
   """
+  #performing element-wise multiplication and summation along the first three axis of the input tensor
   outer_product = tf.linalg.einsum('bijc,bijd->bcd', input_tensor, input_tensor)
 
+  #finding the dimensions of the collapsed dimensions
   input_shape = tf.shape(input_tensor)
   num_locations = tf.cast(input_shape[1] * input_shape[2], tf.float32)
 
+  #sort of averaging the summed product taken along the 2nd and 3rd dimensions
   normalized_result = outer_product / num_locations
 
   return normalized_result
