@@ -72,15 +72,26 @@ def hyperparameter_search(
   """
   # Load the content and style images:
   print("Loading images", end='\r', flush=True)
-  content_path = tf.keras.utils.get_file('content', content_link)
+  content_title, content_link = list(content_link.items())[0]
+  content_path = tf.keras.utils.get_file(content_title, content_link)
   style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
   content_image = load_img(content_path)
   style_images = [load_img(style_path) for style_path in style_paths]
   print("Images loaded.")
 
+
   # Define content and style representations
-  content_layers: List[str] = ['block5_conv2'] 
-  style_layers: List[str] = ['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1']
+  content_layers: List[str] = [
+    'block5_conv2'
+  ] 
+
+  style_layers: List[str] = [
+    'block1_conv1',
+    'block2_conv1',
+    'block3_conv1', 
+    'block4_conv1', 
+    'block5_conv1'
+  ]
 
   # Cycle through the hyperparameters:
   for style_weight in style_weights:
@@ -116,8 +127,8 @@ def main():
     # 'Gwen3': 'https://static.wikia.nocookie.net/intothespiderverse/images/1/1b/Rippeter.jpg/revision/latest/scale-to-width-down/1000?cb=20230927003040'
   }
 
-  style_transfer(style_links, content_link, True)
-  # hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
+  # style_transfer(style_links, content_link, True)
+  hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
   
 if __name__ == "__main__":
   main()
