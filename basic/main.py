@@ -2,7 +2,25 @@ import tensorflow as tf
 from helpers import tensor_to_image, load_img
 from model import StyleTransfer
 import time
-from typing import Dict, List
+from typing import Dict, List, Tuple
+
+def load_style_content_imgs(style_links: Dict[str, str], content_link: Dict[str, str]) -> Tuple[tf.Tensor, List[tf.Tensor]]:
+  """
+  Loads the style and content images.
+
+  Parameters:
+  style_links (Dict[str, str]): A dictionary where keys are names of the style images and values are their URLs.
+  content_link (str): The URL of the content image.
+
+  Returns:
+  Tuple[tf.Tensor, List[tf.Tensor]]: The content image tensor and the style image tensors.
+  """
+  content_title, content_link = list(content_link.items())[0]
+  content_path = tf.keras.utils.get_file(content_title, content_link)
+  style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
+  content_image = load_img(content_path)
+  style_images = [load_img(style_path) for style_path in style_paths]
+  return content_title, content_image, style_images
 
 def style_transfer(style_links: Dict[str, str], content_link: Dict[str, str], visuals: bool = False) -> None:
   """
@@ -15,11 +33,7 @@ def style_transfer(style_links: Dict[str, str], content_link: Dict[str, str], vi
   """
   # Load the content and style images:
   print("Loading images", end='\r', flush=True)
-  content_title, content_link = list(content_link.items())[0]
-  content_path = tf.keras.utils.get_file(content_title, content_link)
-  style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
-  content_image = load_img(content_path)
-  style_images = [load_img(style_path) for style_path in style_paths]
+  content_title, content_image, style_images = load_style_content_imgs(style_links, content_link)
   print("Images loaded.")
 
   # Define content and style representations
@@ -72,11 +86,7 @@ def hyperparameter_search(
   """
   # Load the content and style images:
   print("Loading images", end='\r', flush=True)
-  content_title, content_link = list(content_link.items())[0]
-  content_path = tf.keras.utils.get_file(content_title, content_link)
-  style_paths = [tf.keras.utils.get_file(key, style_links[key]) for key in style_links]
-  content_image = load_img(content_path)
-  style_images = [load_img(style_path) for style_path in style_paths]
+  content_title, content_image, style_images = load_style_content_imgs(style_links, content_link)
   print("Images loaded.")
 
 
@@ -108,7 +118,7 @@ def hyperparameter_search(
         print("\nModel trained.")
 
         # Save the output image:
-        output_file_path = f"basic/output/search/Gwen_{style_weight}_{content_weight}_{total_variance_weight}_{int(time.time())}.jpg"
+        output_file_path = f"basic/output/search/{content_title}_{style_weight}_{content_weight}_{total_variance_weight}_{int(time.time())}.jpg"
         print("Saving the output image", end='\r', flush=True)
         with open(output_file_path,'wb') as f:
           tensor_to_image(img).save(f, "JPEG")
