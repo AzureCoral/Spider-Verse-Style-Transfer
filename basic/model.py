@@ -2,7 +2,7 @@ import tensorflow as tf
 import platform
 from helpers import tensor_to_image, avg_gram, plot_losses
 import imageio
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import time
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
@@ -105,7 +105,7 @@ class StyleContentModel(tf.keras.models.Model):
     self.num_style_layers = len(style_layers)
     self.vgg.trainable = False
 
-  def call(self, inputs: tf.Tensor) -> Tuple(Dict[str, tf.Tensor], Dict[str, tf.Tensor]):
+  def call(self, inputs: tf.Tensor) -> Tuple[Dict[str, tf.Tensor], Dict[str, tf.Tensor]]:
     """
     Calls the StyleContentModel.
 
