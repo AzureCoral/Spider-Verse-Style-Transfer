@@ -105,7 +105,7 @@ class StyleContentModel(tf.keras.models.Model):
     self.num_style_layers = len(style_layers)
     self.vgg.trainable = False
 
-  def call(self, inputs: tf.Tensor) -> Dict[str, Dict[str, tf.Tensor]]:
+  def call(self, inputs: tf.Tensor) -> Tuple(Dict[str, tf.Tensor], Dict[str, tf.Tensor]):
     """
     Calls the StyleContentModel.
 
@@ -116,7 +116,7 @@ class StyleContentModel(tf.keras.models.Model):
     Dict[str, Dict[str, tf.Tensor]]: A dictionary containing the style and content outputs.
     """
     "Expects float input in [0,1]"
-    inputs = inputs*255.0
+    inputs *= 255.0
     preprocessed_input = tf.keras.applications.vgg19.preprocess_input(inputs)
     outputs = self.vgg(preprocessed_input)
 
@@ -132,7 +132,7 @@ class StyleContentModel(tf.keras.models.Model):
     style_dict = {style_name: value for style_name, value 
         in zip(self.style_layers, style_outputs)}
 
-    return {'content': content_dict, 'style': style_dict}
+    return content_dict, style_dict
 
 class StyleTransfer():
   def __init__(
@@ -162,15 +162,15 @@ class StyleTransfer():
     for layer in style_layers:
       self.style_targets[layer] = []
     for style_image in style_images:
-      style_target = self.extractor(style_image)['style']
+      style_target = self.extractor(style_image)[1]
       for key in style_target:
         self.style_targets[key].append(style_target[key])
     self.style_targets = avg_gram(self.style_targets)
 
-    # img_styles = [self.extractor(style_image)['style'] for style_image in style_images]
+    # img_styles = [self.extractor(style_image)[1] for style_image in style_images]
     # self.style_targets = {style_layer : tf.keras.layers.average([img[style_layer] for img in img_styles]) for style_layer in style_layers}
 
-    self.content_targets = self.extractor(content_image)['content']
+    self.content_targets = self.extractor(content_image)[0]
     if platform.system() == "Darwin" and platform.processor() == "arm":
       self.opt = tf.keras.optimizers.legacy.Adam(learning_rate=0.02, beta_1=0.99, epsilon=1e-1)
     else:
@@ -208,10 +208,10 @@ class StyleTransfer():
   @tf.function()
   def train_step(self):
     with tf.GradientTape() as tape:
-      outputs = self.extractor(self.image)
+      content_outputs, style_outputs = self.extractor(self.image)
 
-      style_loss = self.style_loss(outputs['style'])
-      content_loss = self.content_loss(outputs['content'])
+      content_loss = self.content_loss(content_outputs)
+      style_loss = self.style_loss(style_outputs)
 
       loss = style_loss + content_loss + self.total_variation_weight*tf.image.total_variation(self.image)
 
