@@ -50,7 +50,7 @@ def vgg_layers(layer_names: List[str]) -> tf.keras.Model:
     """
     model = TransferCNN()
 
-    loaded_model = tf.keras.models.load_model('../checkpoints/weights_new_keras.keras', custom_objects={'TransferCNN': TransferCNN})
+    loaded_model = tf.keras.models.load_model('weights.keras', custom_objects={'TransferCNN': TransferCNN})
 
     loaded_model = loaded_model.vgg
 
