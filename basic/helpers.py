@@ -69,3 +69,12 @@ def plot_losses(style_losses: List[float], content_losses: List[float]) -> None:
   plt.legend()
   plt.yscale('log')  # Set y-axis to logarithmic scale
   plt.show()
+
+
+def powerset(s):
+  out = dict()
+  x = len(s)
+  for i in range(1 << x):
+    out[bin(i)[2:]] = [s[j] for j in range(x) if (i & (1 << j))]
+  out.pop('0')
+  return out

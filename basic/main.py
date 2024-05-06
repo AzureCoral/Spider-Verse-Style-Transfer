@@ -1,5 +1,5 @@
 import tensorflow as tf
-from helpers import tensor_to_image, load_img
+from helpers import tensor_to_image, load_img, powerset
 from model import StyleTransfer
 import time
 from typing import Dict, List, Tuple
@@ -124,6 +124,47 @@ def hyperparameter_search(
           tensor_to_image(img).save(f, "JPEG")
         print(f"Output image saved at {output_file_path}")
 
+
+def conv_layer_search(
+    style_links: Dict[str, str], 
+    content_link: str, 
+    content_layers: List[str],
+    style_layers: List[str],
+    visuals: bool = False) -> None:
+  """
+  Performs style transfer with different hyperparameters from the style images to the content image.
+
+  Parameters:
+  style_links (Dict[str, str]): A dictionary where keys are names of the style images and values are their URLs.
+  content_link (str): The URL of the content image.
+  style_weights (List[float]): List of style weights to try.
+  content_weights (List[float]): List of content weights to try.
+  total_variance_weights (List[float]): List of total variance weights to try.
+  visuals (bool, optional): If True, visualizes the training process. Defaults to False.
+  """
+  # Load the content and style images:
+  print("Loading images", end='\r', flush=True)
+  content_title, content_image, style_images = load_style_content_imgs(style_links, content_link)
+  print("Images loaded.")
+
+  content_layer_combos = powerset(content_layers)
+  style_layer_combos = powerset(style_layers)
+  
+  # Cycle through the hyperparameters:
+  for content_layer_id, content_layer_combo in content_layer_combos.items():
+    for style_layer_id, style_layer_combo in style_layer_combos.items():
+      print("Initializing model", end='\r', flush=True)
+      model = StyleTransfer(content_layer_combo, style_layer_combo, style_images, content_image)
+      print(f"Model initialized {content_layer_combo=}, {style_layer_combo=}")
+      print("\nTraining model:")
+      img = model.train(epochs=10, visuals=visuals)    
+      print("\nModel trained.")
+      output_file_path = f"basic/output/search/{content_title}_{content_layer_id}_{style_layer_id}_{int(time.time())}.jpg"
+      print("Saving the output image", end='\r', flush=True)
+      with open(output_file_path,'wb') as f:
+        tensor_to_image(img).save(f, "JPEG")
+      print(f"Output image saved at {output_file_path}")
+
 def main():
   style_links = {
     'Gwen1': 'https://static.wikia.nocookie.net/p__/images/2/2d/Gwenhugsherdad.jpg/revision/latest/scale-to-width-down/1000?cb=20230831234851&path-prefix=protagonist',
@@ -138,7 +179,8 @@ def main():
   }
 
   # style_transfer(style_links, content_link, True)
-  hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
+  # hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
+  conv_layer_search(style_links, content_link, ['block4_conv1', 'block4_conv2', 'block5_conv1', 'block5_conv2'], ['block1_conv1', 'block1_conv2', 'block2_conv1', 'block2_conv2', 'block3_conv1', 'block3_conv2', 'block4_conv1', 'block4_conv2', 'block5_conv1', 'block5_conv2'], False)
   
 if __name__ == "__main__":
   main()
