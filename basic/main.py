@@ -148,7 +148,8 @@ def conv_layer_search(
   print("Images loaded.")
 
   content_layer_combos = powerset(content_layers)
-  style_layer_combos = powerset(style_layers)
+  # style_layer_combos = powerset(style_layers)
+  style_layer_combos = {'11111' : style_layers}
   
   # Cycle through the hyperparameters:
   for content_layer_id, content_layer_combo in content_layer_combos.items():
@@ -180,7 +181,7 @@ def main():
 
   # style_transfer(style_links, content_link, True)
   # hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
-  conv_layer_search(style_links, content_link, ['block4_conv1', 'block4_conv2', 'block5_conv1', 'block5_conv2'], ['block1_conv1', 'block1_conv2', 'block2_conv1', 'block2_conv2', 'block3_conv1', 'block3_conv2', 'block4_conv1', 'block4_conv2', 'block5_conv1', 'block5_conv2'], False)
+  conv_layer_search(style_links, content_link, ['block4_conv1', 'block4_conv2', 'block5_conv2', 'block5_conv3'], ['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1'], False)
   
 if __name__ == "__main__":
   main()
