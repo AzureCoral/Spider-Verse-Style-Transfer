@@ -116,7 +116,7 @@ class StyleContentModel(tf.keras.models.Model):
     Dict[str, Dict[str, tf.Tensor]]: A dictionary containing the style and content outputs.
     """
     "Expects float input in [0,1]"
-    inputs *= 255.0
+    inputs = 255.0 * inputs
     preprocessed_input = tf.keras.applications.vgg19.preprocess_input(inputs)
     outputs = self.vgg(preprocessed_input)
 
