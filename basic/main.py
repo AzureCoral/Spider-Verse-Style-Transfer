@@ -148,6 +148,7 @@ def conv_layer_search(
   print("Images loaded.")
 
   content_layer_combos = powerset(content_layers)
+  print(content_layer_combos)
   # style_layer_combos = powerset(style_layers)
   style_layer_combos = {'11111' : style_layers}
   
@@ -155,7 +156,7 @@ def conv_layer_search(
   for content_layer_id, content_layer_combo in content_layer_combos.items():
     for style_layer_id, style_layer_combo in style_layer_combos.items():
       print("Initializing model", end='\r', flush=True)
-      model = StyleTransfer(content_layer_combo, style_layer_combo, style_images, content_image)
+      model = StyleTransfer(style_layer_combo, content_layer_combo, style_images, content_image)
       print(f"Model initialized {content_layer_combo=}, {style_layer_combo=}")
       print("\nTraining model:")
       img = model.train(epochs=10, visuals=visuals)    
@@ -181,7 +182,7 @@ def main():
 
   # style_transfer(style_links, content_link, True)
   # hyperparameter_search(style_links, content_link, [1e-1, 1e-2, 1e-3], [1e4, 1e5, 1e6], [10, 20, 30, 40, 50], False)
-  conv_layer_search(style_links, content_link, ['block4_conv1', 'block4_conv2', 'block5_conv2', 'block5_conv3'], ['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1'], False)
+  conv_layer_search(style_links, content_link, ['block4_conv1', 'block4_conv2', 'block5_conv1', 'block5_conv2'], ['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1'], False)
   
 if __name__ == "__main__":
   main()
