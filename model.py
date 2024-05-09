@@ -10,7 +10,7 @@ import keras
 import platform
 from helpers import tensor_to_image, avg_gram, plot_losses
 import imageio
-from typing import List, Dict, Tuple
+from typing import Any, List, Dict, Tuple
 import time
 
 
@@ -25,53 +25,53 @@ class TransferCNN(tf.keras.Model):
   def __init__(self) -> None:
     super(TransferCNN, self).__init__()
 
-    self.optimizer = Adam(learning_rate=LEARNING_RATE)
+    self.optimizer: tf.keras.optimizers.Optimizer = Adam(learning_rate=LEARNING_RATE)
 
-    self.vgg = VGG19(include_top=False, weights='imagenet')
+    self.vgg: tf.keras.Model = VGG19(include_top=False, weights='imagenet')
 
-    self.flatten = Flatten()
-    self.dense1 = Dense(512, activation='relu')
-    self.dropout1 = Dropout(0.3)
-    self.dense2 = Dense(256, activation='relu')
-    self.dropout2 = Dropout(0.3)
-    self.dense3 = Dense(NUM_CLASSES, activation='softmax')
+    self.flatten: tf.keras.layers.Flatten = Flatten()
+    self.dense1: tf.keras.layers.Dense = Dense(512, activation='relu')
+    self.dropout1: tf.keras.layers.Dropout = Dropout(0.3)
+    self.dense2: tf.keras.layers.Dense = Dense(256, activation='relu')
+    self.dropout2: tf.keras.layers.Dropout = Dropout(0.3)
+    self.dense3: tf.keras.layers.Dense = Dense(NUM_CLASSES, activation='softmax')
 
-  def call(self, inputs):
-    x = self.vgg(inputs)
-    x = self.flatten(x)
-    x = self.dense1(x)
-    x = self.dropout1(x)
-    x = self.dense2(x)
-    x = self.dropout2(x)
+  def call(self, inputs: tf.Tensor) -> tf.Tensor:
+    x: tf.Tensor = self.vgg(inputs)
+    x: tf.Tensor = self.flatten(x)
+    x: tf.Tensor = self.dense1(x)
+    x: tf.Tensor = self.dropout1(x)
+    x: tf.Tensor = self.dense2(x)
+    x: tf.Tensor = self.dropout2(x)
     return self.dense3(x)
 
   @staticmethod
-  def loss_fn(y, y_pred):
+  def loss_fn(y: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
     return categorical_crossentropy(y, y_pred)
 
-  def train_step(self, x, y):
+  def train_step(self, x: tf.Tensor, y: tf.Tensor) -> None:
     with tf.GradientTape() as tape:
-        y_pred = self.call(x)
-        loss = self.loss_fn(y, y_pred)
-    loss_value = tf.reduce_mean(loss)
+        y_pred: tf.Tensor = self.call(x)
+        loss: tf.Tensor = self.loss_fn(y, y_pred)
+    loss_value: tf.Tensor = tf.reduce_mean(loss)
     print(f"Loss: {loss_value.numpy()}\n")
-    grads = tape.gradient(loss, self.trainable_variables)
+    grads: List[tf.Tensor] = tape.gradient(loss, self.trainable_variables)
     self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
-  def train(self, x, y):
-    dataset = tf.data.Dataset.from_tensor_slices((x, y)).shuffle(len(x)).batch(BATCH_SIZE)
+  def train(self, x: tf.Tensor, y: tf.Tensor) -> None:
+    dataset: tf.data.Dataset = tf.data.Dataset.from_tensor_slices((x, y)).shuffle(len(x)).batch(BATCH_SIZE)
 
     for i in range(NUM_EPOCHS):
         print(f"Epoch {i+1}/{NUM_EPOCHS}\n")
         for batch_x, batch_y in dataset:
             self.train_step(batch_x, batch_y)
 
-  def build(self, input_shape):
+  def build(self, input_shape: Tuple[int, int, int]) -> None:
     self.vgg.build(input_shape)
     super().build(input_shape)
 
   @classmethod
-  def from_config(cls, config):
+  def from_config(cls, config: Dict[str, Any]) -> "TransferCNN":
     return cls()
 
 def clip_0_1(image: tf.Tensor) -> tf.Tensor:
