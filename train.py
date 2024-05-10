@@ -1,5 +1,5 @@
 from preprocess import get_data
-from models import TransferCNN
+from transfer_learning import TransferCNN
 import tensorflow as tf
 import numpy as np
 
@@ -10,7 +10,8 @@ def main():
     all_data_folder = "data"
     print("Starting Preprocessing...")
     images, labels = get_data(all_data_folder)
-    print("Finished Preprocessing!")print("Starting Training without Weights")
+    print("Finished Preprocessing!")
+    # print("Starting Training without Weights")
 
     model = TransferCNN(load=False, nontrainable_layers=None)
 

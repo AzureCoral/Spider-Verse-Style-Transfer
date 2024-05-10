@@ -60,7 +60,7 @@ def style_transfer(style_links: Dict[str, str], content_link: Dict[str, str], vi
     print("\nModel trained.")
 
     # Save the output image:
-    output_file_path = f"basic/output/{content_title}_{int(time.time())}.jpg"
+    output_file_path = f"outputs/{content_title}_{int(time.time())}.jpg"
     print("Saving the output image", end='\r', flush=True)
     with open(output_file_path,'wb') as f:
         tensor_to_image(img).save(f, "JPEG")
@@ -118,7 +118,7 @@ def hyperparameter_search(
                 print("\nModel trained.")
 
                 # Save the output image:
-                output_file_path = f"basic/output/search/{content_title}_{style_weight}_{content_weight}_{total_variance_weight}_{int(time.time())}.jpg"
+                output_file_path = f"outputs/search/{content_title}_{style_weight}_{content_weight}_{total_variance_weight}_{int(time.time())}.jpg"
                 print("Saving the output image", end='\r', flush=True)
                 with open(output_file_path,'wb') as f:
                     tensor_to_image(img).save(f, "JPEG")
@@ -160,7 +160,7 @@ def conv_layer_search(
             print("\nTraining model:")
             img = model.train(epochs=10, visuals=visuals)    
             print("\nModel trained.")
-            output_file_path = f"basic/output/search/{content_title}_{content_layer_id}_{style_layer_id}_{int(time.time())}.jpg"
+            output_file_path = f"outputs/search/{content_title}_{content_layer_id}_{style_layer_id}_{int(time.time())}.jpg"
             print("Saving the output image", end='\r', flush=True)
             with open(output_file_path,'wb') as f:
                 tensor_to_image(img).save(f, "JPEG")

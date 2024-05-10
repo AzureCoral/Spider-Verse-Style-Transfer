@@ -62,7 +62,7 @@ def vgg_layers_custom(layer_names: List[str]) -> tf.keras.Model:
     """
     model = TransferCNN(layer_names)
     loaded_model = tf.keras.models.load_model(
-        '../checkpoints/weights_trained.keras',
+        'checkpoints/weights_trained.keras',
         custom_objects={'TransferCNN': lambda trainable_layers, load=False: TransferCNN(trainable_layers=trainable_layers, load=load)}
     )
 
@@ -132,7 +132,10 @@ class StyleContentModel(tf.keras.models.Model):
         content_layers (List[str]): The names of the content layers to include in the model.
         """
         super(StyleContentModel, self).__init__()
-        self.vgg = vgg_layers_custom(style_layers + content_layers)
+        try:
+            self.vgg = vgg_layers_custom(style_layers + content_layers)
+        except IOError:
+            self.vgg = vgg_layers_pretrained(style_layers + content_layers)
         self.style_layers = style_layers
         self.content_layers = content_layers
         self.num_style_layers = len(style_layers)
@@ -271,7 +274,7 @@ class StyleTransfer():
         for epoch in range(epochs):
             if visuals:
                 # Save image at the end of each epoch
-                output_file_path = f"basic/gif_output/Image{time_start}_{epoch:0>{epoch_len}}.jpg"
+                output_file_path = f"outputs/gif_output/Image{time_start}_{epoch:0>{epoch_len}}.jpg"
                 with open(output_file_path,'wb') as f:
                     tensor_to_image(self.image).save(f, "JPEG")
                     image_paths.append(output_file_path)
@@ -294,7 +297,7 @@ class StyleTransfer():
         # Create GIF
         if visuals:
             images = [imageio.imread(file_path) for file_path in image_paths]
-            gif_path = f"basic/gif_output/training_{time_start}.gif"
+            gif_path = f"outputs/gif_output/training_{time_start}.gif"
             imageio.mimsave(gif_path, images, fps=1)
             plot_losses(style_losses, content_losses)  # Assuming plot_losses is a predefined function
 
