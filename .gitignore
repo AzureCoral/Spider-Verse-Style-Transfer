@@ -45,3 +45,4 @@ seperated_implementation/results/*
 seperated_implementation/transfer_learning/data/*
 seperated_implementation/!transfer_learning/checkpoints/weights_new_keras.keras
 seperated_implementation/transfer_learning/checkpoints/*
+data/*

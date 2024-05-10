@@ -67,10 +67,10 @@ def convert_time_to_sec(time: str) -> int:
 
 
 if __name__ == "__main__":
-    path = "./data/u42_2.mp4"
-    save_path = "./data/universe_42/"
-    start_time = "00:00:01"
-    end_time = "00:02:55"
+    path = "./" #Video Path
+    save_path = "./" #Image Output Path
+    start_time = "00:00:00"
+    end_time = "00:00:00"
     num_imgs = 150
 
     create_images(path, save_path, start_time, end_time, num_imgs)
